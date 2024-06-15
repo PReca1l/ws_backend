@@ -8,7 +8,7 @@ from src.database_session import get_session, DbSession, CouchDBMessage
 from src.imags import ImageUseCase
 from src.messages import MessagesUseCase
 
-from config import Config, model
+from config import Config
 
 
 app = FastAPI()
@@ -21,7 +21,6 @@ connected_users: Dict[str, WebSocket] = {}
 @app.post("/upload")
 async def create_file(file: UploadFile, id: uuid.UUID = Form(), db_session: DbSession = Depends(get_session)):
     ImageUseCase.save_image(db_session, id, file)
-    result, text = model.run(file.file.read())
     return {"file_size": file.size}
 
 
