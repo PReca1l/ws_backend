@@ -60,7 +60,7 @@ class DbSession:
                     messages.append(message)
         return messages
 
-    def save_image(self, file: UploadFile, image_id: uuid.UUID):
+    def save_image(self, file: bytes, image_id: uuid.UUID, filename):
         couch = _get_couchdb()
         db = couch["application"]
         image_id = str(image_id)
@@ -73,7 +73,7 @@ class DbSession:
             }
             db.save(doc)
 
-        db.put_attachment(doc, file.file.read(), file.filename)
+        db.put_attachment(doc, file, filename)
 
         return str(image_id)
 

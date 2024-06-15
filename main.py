@@ -1,8 +1,14 @@
+import json
+
 from fastapi import FastAPI, WebSocket, WebSocketDisconnect, UploadFile, Depends, Form, Path
+from fastapi.middleware.cors import CORSMiddleware
 from typing import Dict, List
+from pydantic import BaseModel
 import couchdb
 import os
 import uuid
+import httpx
+import base64
 
 from src.database_session import get_session, DbSession, CouchDBMessage
 from src.imags import ImageUseCase
@@ -12,16 +18,49 @@ from config import Config
 
 
 app = FastAPI()
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 # Dictionary to store connected users {user_id: WebSocket}
 connected_users: Dict[str, WebSocket] = {}
 
 
+class UploadResponseModel(BaseModel):
+    report: str
+    img: str
+
 # endpoint to receive pictures from http request
 @app.post("/upload")
-async def create_file(file: UploadFile, id: uuid.UUID = Form(), db_session: DbSession = Depends(get_session)):
+async def create_file(
+        file: UploadFile,
+        username: str = Form(),
+        id: uuid.UUID = Form(),
+        db_session: DbSession = Depends(get_session)
+) -> UploadResponseModel:
     ImageUseCase.save_image(db_session, id, file)
-    return {"file_size": file.size}
+    async with httpx.AsyncClient() as client:
+        response = await client.post(f"http://localhost:8881/predict", files={"file": file.file})
+
+    json_response = response.json()
+    decoded_image = base64.decodebytes(bytes(json_response["img"], "utf-8"))
+    report_data = json_response["report"]
+    image_id = ImageUseCase.save_image(db_session, id, decoded_image, "result_" + file.filename)
+
+    current_connection = connected_users[username]
+    ws_response = {
+        "username": "server",
+        "text": report_data,
+        "previewImage": f"http://localhost:8000/images/{id}",
+        "id": str(id)
+    }
+    response_as_text = json.dumps(ws_response)
+    await current_connection.send_text(response_as_text)
+    return UploadResponseModel(report=report_data, img=json_response["img"])
 
 
 @app.get("/history/{username}")
