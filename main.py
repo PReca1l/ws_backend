@@ -1,16 +1,16 @@
-from fastapi import FastAPI, WebSocket, WebSocketDisconnect, UploadFile, Depends, Form
-from typing import Dict
+from fastapi import FastAPI, WebSocket, WebSocketDisconnect, UploadFile, Depends, Form, Path
+from typing import Dict, List
 import couchdb
 import os
 import uuid
 
-from dotenv import load_dotenv
-
-from database_session import get_session, DbSession
+from database_session import get_session, DbSession, CouchDBMessage
 from imags import ImageUseCase
 from messages import MessagesUseCase
 
-load_dotenv()
+from config import Config # NOQA
+
+
 app = FastAPI()
 
 # Dictionary to store connected users {user_id: WebSocket}
@@ -20,9 +20,14 @@ connected_users: Dict[str, WebSocket] = {}
 # endpoint to receive pictures from http request
 @app.post("/upload")
 async def create_file(file: UploadFile, id: uuid.UUID = Form(), db_session: DbSession = Depends(get_session)):
-    print(f"Received file of size {file.size}")
     ImageUseCase.save_image(db_session, id, file)
     return {"file_size": file.size}
+
+
+@app.get("/history/{username}")
+async def get_history(username: str = Path(...), db_session: DbSession = Depends(get_session)) -> List[CouchDBMessage]:
+    messages = MessagesUseCase.get_messages(db_session, username)
+    return messages
 
 
 @app.websocket("/ws/{user_id}")
@@ -33,7 +38,7 @@ async def websocket_endpoint(websocket: WebSocket, user_id: str, db_session: DbS
     try:
         while True:
             data = await websocket.receive_text()
-            MessagesUseCase.save_message(db_session, data)
+            MessagesUseCase.save_message(db_session, data, user_id)
             await broadcast(f"{user_id}: {data}")
 
     except WebSocketDisconnect:
@@ -48,7 +53,7 @@ async def broadcast(message: str):
 async def startup_event():
     username = os.getenv("COUCHDB_USER")
     password = os.getenv("COUCHDB_PASSWORD")
-    host = os.getenv("COUCHDB_HOST")
+    host = os.getenv("COUCHDB_HOSTNAME", "localhost")
 
     couch = couchdb.Server(url=f'http://{username}:{password}@{host}:5984/')
 
