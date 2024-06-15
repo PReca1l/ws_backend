@@ -50,12 +50,15 @@ async def create_file(
     decoded_image = base64.decodebytes(bytes(json_response["img"], "utf-8"))
     report_data = json_response["report"]
     image_id = ImageUseCase.save_image(db_session, id, decoded_image, "result_" + file.filename)
+    host = Config.COUCHDB_SERVER
+    db_name = Config.COUCHDB_DATABASE
+    attachment_url = f"{host}/{db_name}/{image_id}/result_{file.filename}"
 
     current_connection = connected_users[username]
     ws_response = {
         "username": "server",
         "text": report_data,
-        "previewImage": f"http://localhost:8000/images/{id}",
+        "previewImage": attachment_url,
         "id": str(id)
     }
     response_as_text = json.dumps(ws_response)
@@ -78,8 +81,6 @@ async def websocket_endpoint(websocket: WebSocket, user_id: str, db_session: DbS
         while True:
             data = await websocket.receive_text()
             MessagesUseCase.save_message(db_session, data, user_id)
-            current_connection = connected_users[user_id]
-            await current_connection.send_text(data)
 
     except WebSocketDisconnect:
         del connected_users[user_id]
