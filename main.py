@@ -1,4 +1,4 @@
-from fastapi import FastAPI, WebSocket, WebSocketDisconnect, File
+from fastapi import FastAPI, WebSocket, WebSocketDisconnect, UploadFile
 from typing import Dict, Annotated
 
 app = FastAPI()
@@ -9,9 +9,9 @@ connected_users: Dict[str, WebSocket] = {}
 
 # endpoint to receive pictures from http request
 @app.post("/upload")
-async def create_file(file: Annotated[bytes, File()]):
-    return {"file_size": len(file)}
-
+async def create_file(file: UploadFile):
+    print(f"Received file of size {file.size}")
+    return {"file_size": file.size}
 
 
 @app.websocket("/ws/{user_id}")
