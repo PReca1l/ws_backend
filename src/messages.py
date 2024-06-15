@@ -3,7 +3,7 @@ import uuid
 
 from pydantic import BaseModel
 
-from database_session import DbSession
+from src.database_session import DbSession
 
 
 class Message(BaseModel):

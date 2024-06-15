@@ -1,6 +1,6 @@
 from fastapi import UploadFile
 
-from database_session import DbSession
+from src.database_session import DbSession
 
 
 class ImageUseCase:
