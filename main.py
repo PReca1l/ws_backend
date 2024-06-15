@@ -39,14 +39,11 @@ async def websocket_endpoint(websocket: WebSocket, user_id: str, db_session: DbS
         while True:
             data = await websocket.receive_text()
             MessagesUseCase.save_message(db_session, data, user_id)
-            await broadcast(f"{user_id}: {data}")
+            current_connection = connected_users[user_id]
+            await current_connection.send_text(data)
 
     except WebSocketDisconnect:
         del connected_users[user_id]
-
-async def broadcast(message: str):
-    for connection in connected_users.values():
-        await connection.send_text(message)
 
 
 @app.on_event("startup")
