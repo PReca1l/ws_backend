@@ -6,3 +6,19 @@ services:
       - "8000:8000"
     volumes:
       - .:/app
+    depends_on:
+      - couchdb
+
+  couchdb:
+    image: couchdb:3.3.3
+    restart: always
+    ports:
+      - "5984:5984"
+    environment:
+      COUCHDB_USER: admin
+      COUCHDB_PASSWORD: password
+    volumes:
+      - couchdb:/opt/couchdb/data
+
+volumes:
+    couchdb:
