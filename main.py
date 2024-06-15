@@ -8,7 +8,7 @@ from database_session import get_session, DbSession, CouchDBMessage
 from imags import ImageUseCase
 from messages import MessagesUseCase
 
-from config import Config # NOQA
+from config import Config
 
 
 app = FastAPI()
@@ -48,8 +48,8 @@ async def websocket_endpoint(websocket: WebSocket, user_id: str, db_session: DbS
 
 @app.on_event("startup")
 async def startup_event():
-    username = os.getenv("COUCHDB_USER")
-    password = os.getenv("COUCHDB_PASSWORD")
+    username = Config.COUCHDB_USER
+    password = Config.COUCHDB_PASSWORD
     host = os.getenv("COUCHDB_HOSTNAME", "localhost")
 
     couch = couchdb.Server(url=f'http://{username}:{password}@{host}:5984/')

@@ -19,9 +19,9 @@ class CouchDBMessage(BaseModel):
 
 
 def _get_couchdb():
-    username = os.getenv("COUCHDB_USER")
-    password = os.getenv("COUCHDB_PASSWORD")
-    host = os.getenv("COUCHDB_HOSTNAME", "localhost")
+    username = Config.COUCHDB_USER
+    password = Config.COUCHDB_PASSWORD
+    host = Config.COUCHDB_HOSTNAME
 
     couch = couchdb.Server(url=f'http://{username}:{password}@{host}:5984/')
 
