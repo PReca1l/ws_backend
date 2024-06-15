@@ -1,5 +1,6 @@
 import uuid
-from typing import List
+from datetime import datetime
+from typing import List, Optional
 
 from fastapi import UploadFile
 from pydantic import BaseModel
@@ -14,6 +15,7 @@ class CouchDBMessage(BaseModel):
     message: str
     user_id: str
     attachment_url: str
+    timestamp: Optional[str] = None
 
 
 def _get_couchdb():
@@ -39,7 +41,7 @@ class DbSession:
                 "selector": {
                     "user_id": username
                 },
-                "fields": ["_id", "message", "user_id", "_attachments"],
+                "fields": ["_id", "message", "user_id", "_attachments", "timestamp"],
             }
         )
         for doc in docs:
@@ -53,6 +55,7 @@ class DbSession:
                         message=doc["message"],
                         user_id=doc["user_id"],
                         attachment_url=attachment_url,
+                        timestamp=doc["timestamp"],
                     )
                     messages.append(message)
         return messages
@@ -78,16 +81,19 @@ class DbSession:
         couch = _get_couchdb()
         db = couch["application"]
         message_id = str(message_id)
+        current_time = datetime.now().isoformat()
 
         if message_id in db:
             doc = db[message_id]
             doc["message"] = message
             doc["user_id"] = user_id
+            doc["timestamp"] = current_time
         else:
             doc = {
                 "_id": message_id,
                 "message": message,
-                "user_id": user_id
+                "user_id": user_id,
+                "timestamp": current_time,
             }
 
         db.save(doc)
