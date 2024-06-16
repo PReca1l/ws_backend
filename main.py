@@ -44,7 +44,7 @@ async def create_file(
 ) -> UploadResponseModel:
     ImageUseCase.save_image(db_session, id, file)
     async with httpx.AsyncClient() as client:
-        response = await client.post(f"http://localhost:8881/predict", files={"file": file.file})
+        response = await client.post(Config.PREDICT_URL, files={"file": file.file})
 
     json_response = response.json()
     decoded_image = base64.decodebytes(bytes(json_response["img"], "utf-8"))

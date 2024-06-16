@@ -1,5 +1,14 @@
 version: '3.9'
 services:
+  cdn:
+    build: cdn_emulator
+    ports:
+      - "8002:8002"
+    volumes:
+      - .:/app
+    depends_on:
+      - couchdb
+
   web:
     build: .
     ports:
@@ -8,6 +17,8 @@ services:
       - .:/app
     depends_on:
       - couchdb
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
 
   couchdb:
     image: couchdb:3.3.3
