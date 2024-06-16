@@ -4,6 +4,7 @@ from dotenv import load_dotenv
 load_dotenv()
 
 class Config:
+    IMAGE_CDN = os.getenv('IMAGE_CDN', 'http://localhost:8002')
     COUCHDB_SERVER = os.getenv('COUCHDB_HOST', 'http://localhost:5984')
     COUCHDB_DATABASE = os.getenv('COUCHDB_DATABASE', 'application')
     COUCHDB_USER = os.getenv('COUCHDB_USER', 'admin')

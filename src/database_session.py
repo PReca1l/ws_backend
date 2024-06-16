@@ -47,9 +47,8 @@ class DbSession:
         for doc in docs:
             if "_attachments" in doc:
                 for attachment_name in doc["_attachments"]:
-                    host = Config.COUCHDB_SERVER
-                    db_name = Config.COUCHDB_DATABASE
-                    attachment_url = f"{host}/{db_name}/{doc['_id']}/{attachment_name}"
+                    host = Config.IMAGE_CDN
+                    attachment_url = f"{host}/{doc['_id']}/{attachment_name}"
                     message = CouchDBMessage(
                         id=doc["_id"],
                         message=doc["message"],

@@ -50,9 +50,8 @@ async def create_file(
     decoded_image = base64.decodebytes(bytes(json_response["img"], "utf-8"))
     report_data = json_response["report"]
     image_id = ImageUseCase.save_image(db_session, id, decoded_image, "result_" + file.filename)
-    host = Config.COUCHDB_SERVER
-    db_name = Config.COUCHDB_DATABASE
-    attachment_url = f"{host}/{db_name}/{image_id}/result_{file.filename}"
+    host = Config.IMAGE_CDN
+    attachment_url = f"{host}/{image_id}/result_{file.filename}"
 
     current_connection = connected_users[username]
     ws_response = {
