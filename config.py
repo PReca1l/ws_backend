@@ -12,4 +12,3 @@ class Config:
     COUCHDB_USER = os.getenv('COUCHDB_USER', 'admin')
     COUCHDB_PASSWORD = os.getenv('COUCHDB_PASSWORD', 'admin')
     COUCHDB_HOSTNAME = os.getenv('COUCHDB_HOSTNAME', 'localhost')
-    MODEL_PATH = os.getenv('MODEL_PATH', 'yolov5s.pt')
